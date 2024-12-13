@@ -1,0 +1,14 @@
+{
+  "name": "com.appidea.minigames.dental_care",
+  "version": "0.1.0",
+  "displayName": "Dental Care",
+  "description": "Caring about human's, aligator's and shark's dental hygine.",
+  "dependencies": {
+    "com.unity.addressables": "1.21.21",
+    "com.unity.render-pipelines.universal": "14.0.10"
+  },
+  "unity": "2022.3",
+  "author": {
+    "name": "salome karaulashvili"
+  }
+}
