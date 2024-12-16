@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be96c86d337b413a9883ba842490e1dc, type: 3}
   m_Name: MiniGameConfig
   m_EditorClassIdentifier: 
-  MiniGameName: dental_care
-  Version: 0.1.0
+  MiniGameName: Dental_Care
+  Version: 0.1.1
   Url: https://pub-d6401168abb84b4cb642139830069287.r2.dev
   CustomRenderPipelineAsset: {fileID: 11400000, guid: 899740d0d211eb443905dc1dbe28ef11, type: 2}
