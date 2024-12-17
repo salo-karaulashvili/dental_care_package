@@ -10,7 +10,7 @@ public class DentalCareEntryPoint : BaseMiniGameEntryPoint
     protected override Task LoadInternal()
     {
         var gameManager = Instantiate(gamePrefab);
-        gameManager.GetComponent<gameController>().SetEntryPoint(this);
+        gameManager.GetComponentInChildren<gameController>().SetEntryPoint(this);
         return Task.CompletedTask;
     }
 

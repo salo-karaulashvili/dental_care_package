@@ -37,15 +37,20 @@ public class gameController : MonoBehaviour
     private static int BACTERIA_TO_KILL=6;
     private DentalCareEntryPoint _entryPoint;
 
+
+    
     void Start(){
         humanButton.onClick.AddListener(humantrue);
         crocodileButton.onClick.AddListener(crocodiletrue);
         sharkButton.onClick.AddListener(sharktrue);
-        exitButton.onClick.AddListener(finishGame);
+
         gameon=false;
     }
 
-    private void finishGame() =>_entryPoint.InvokeGameFinished();
+    public void finishGame()
+    {
+        _entryPoint.InvokeGameFinished();
+    }
 
     public void SetEntryPoint(DentalCareEntryPoint entryPoint){_entryPoint=entryPoint;}
 
