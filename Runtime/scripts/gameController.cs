@@ -36,6 +36,7 @@ public class gameController : MonoBehaviour
     private bool gameon;
     private static int BACTERIA_TO_KILL=6;
     private DentalCareEntryPoint _entryPoint;
+    private SpriteResolver sr;
 
 
     
@@ -45,6 +46,7 @@ public class gameController : MonoBehaviour
         sharkButton.onClick.AddListener(sharktrue);
 
         gameon=false;
+        sr=toothbrush.GetComponent<SpriteResolver>();
     }
 
     public void finishGame()
@@ -57,18 +59,21 @@ public class gameController : MonoBehaviour
     private void humantrue(){
         human=true;
         humanMouth.SetActive(true);
+        sr.SetCategoryAndLabel("textures","human");
         init();
     }
 
     private void crocodiletrue(){
         crocodile=true;
         crocodileMouth.SetActive(true);
+        sr.SetCategoryAndLabel("textures","crocodile");
         init();
     }
 
     private void sharktrue(){
         shark=true;
         sharkMouth.SetActive(true);
+        sr.SetCategoryAndLabel("textures","shark");
         init();
     }
 
