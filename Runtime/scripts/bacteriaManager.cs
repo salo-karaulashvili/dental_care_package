@@ -46,7 +46,7 @@ public class bacteriaManager : MonoBehaviour
             if (Input.touchCount > 0){
                 Touch touch = Input.GetTouch(0);
                 if (touch.phase == TouchPhase.Began){
-                    RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+                    RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(touch.position), Vector2.zero);
                     if(hit){
                         if (hit.collider.gameObject.transform == transform){
                             if(cooldown>=COOLDOWN_TIME){
