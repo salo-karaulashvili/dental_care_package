@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.InputSystem.EnhancedTouch;
 
 public class DragAndDrop : MonoBehaviour
 {
@@ -13,10 +12,17 @@ public class DragAndDrop : MonoBehaviour
     [SerializeField] private float fingerFollowSpeed;
     [SerializeField] private float snapRange;
     [SerializeField] private int objIndex;
+    [SerializeField] private SpriteRenderer objectSpriteRenderer;
     public int ObjIndex
     {
         get => objIndex;
         set => objIndex = value;
+    }
+
+    public SpriteRenderer ObjectSpriteRenderer
+    {
+        get => objectSpriteRenderer;
+        set => objectSpriteRenderer = value;
     }
 
     [Header("Dragging Settings")]
@@ -24,6 +30,25 @@ public class DragAndDrop : MonoBehaviour
     [SerializeField] private List<Vector2> targetPositions = new();
     [SerializeField] private bool canDrag = true;
     [SerializeField] private bool isSnapped;
+    [SerializeField] private int dragLayerIndex;
+    [SerializeField] private int snappedLayerIndex;
+    [SerializeField] private int startLayerIndex;
+
+    public int DragLayerIndex
+    {
+        get => dragLayerIndex;
+        set => dragLayerIndex = value;
+    }
+        public int SnappedLayerIndex
+    {
+        get => snappedLayerIndex;
+        set => snappedLayerIndex = value;
+    }
+        public int StartLayerIndex
+    {
+        get => startLayerIndex;
+        set => startLayerIndex = value;
+    }
     public bool IsSnapped => isSnapped;
     public bool CanDrag => canDrag;
 
@@ -58,28 +83,14 @@ public class DragAndDrop : MonoBehaviour
     
     private Vector3 touchOffset;
     public Vector3 StartPosition { get; set; }
-    private Finger activeFinger;
+
+    private bool isDragging;
+    private int activeTouchIndex = -1;
 
     public event Action OnDragStart;
     public event Action OnDragEnd;
     public event Action<Transform, int> OnCorrectSnap;
     public event Action<int> OnIncorrectSnap;
-
-    private void OnEnable()
-    {
-        EnhancedTouchSupport.Enable();
-        UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerDown += HandleFingerDown;
-        UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerMove += HandleFingerMove;
-        UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerUp += HandleFingerUp;
-    }
-
-    private void OnDisable()
-    {
-        UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerDown -= HandleFingerDown;
-        UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerMove -= HandleFingerMove;
-        UnityEngine.InputSystem.EnhancedTouch.Touch.onFingerUp -= HandleFingerUp;
-        EnhancedTouchSupport.Disable();
-    }
 
     private void Start()
     {
@@ -87,31 +98,69 @@ public class DragAndDrop : MonoBehaviour
         StartPosition = transform.position;
     }
 
-    private void HandleFingerDown(Finger touchedFinger)
+    private void Update()
     {
-        if (activeFinger == null && IsTouchingObject(touchedFinger) && canDrag)
+        // Check if mouse is being used for input
+        if (Input.GetMouseButtonDown(0))
         {
-            activeFinger = touchedFinger;
-            touchOffset = transform.position - mainCamera.ScreenToWorldPoint(new Vector3(touchedFinger.screenPosition.x, touchedFinger.screenPosition.y, mainCamera.nearClipPlane));
-            OnDragStart?.Invoke();
-            transform.DOScale(dragScale, tweenAnimationDuration);
+            HandleFingerDown(Input.mousePosition);
+        }
+        else if (Input.GetMouseButton(0) && isDragging)
+        {
+            HandleFingerMove(Input.mousePosition);
+        }
+        else if (Input.GetMouseButtonUp(0) && isDragging)
+        {
+            HandleFingerUp();
+        }
+
+        // Handle touch input (mobile)
+        if (Input.touchCount > 0)
+        {
+            var touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                HandleFingerDown(touch.position);
+            }
+            else if (touch.phase == TouchPhase.Moved && isDragging)
+            {
+                HandleFingerMove(touch.position);
+            }
+            else if (touch.phase == TouchPhase.Ended && isDragging)
+            {
+                HandleFingerUp();
+            }
         }
     }
 
-    private void HandleFingerMove(Finger movedFinger)
+    private void HandleFingerDown(Vector3 touchPosition)
     {
-        if (movedFinger != activeFinger || !canDrag) return;
-        var targetPosition = mainCamera.ScreenToWorldPoint(new Vector3(movedFinger.screenPosition.x, movedFinger.screenPosition.y, mainCamera.nearClipPlane)) + touchOffset;
+        if (activeTouchIndex == -1 && IsTouchingObject(touchPosition) && canDrag)
+        {
+            activeTouchIndex = 0;
+            touchOffset = transform.position - mainCamera.ScreenToWorldPoint(new Vector3(touchPosition.x, touchPosition.y, mainCamera.nearClipPlane));
+            OnDragStart?.Invoke();
+            objectSpriteRenderer.sortingOrder = dragLayerIndex;
+            transform.DOScale(dragScale, tweenAnimationDuration);
+            isDragging = true;
+        }
+    }
+
+    private void HandleFingerMove(Vector3 touchPosition)
+    {
+        if (!isDragging || activeTouchIndex != 0) return;
+        var targetPosition = mainCamera.ScreenToWorldPoint(new Vector3(touchPosition.x, touchPosition.y, mainCamera.nearClipPlane)) + touchOffset;
         var position = transform.position;
         targetPosition.z = position.z;
         position = Vector2.Lerp(position, targetPosition, fingerFollowSpeed);
         transform.position = position;
     }
 
-    private void HandleFingerUp(Finger liftedFinger)
+    private void HandleFingerUp()
     {
-        if (liftedFinger != activeFinger) return;
-        activeFinger = null;
+        if (activeTouchIndex != 0) return;
+        activeTouchIndex = -1;
+        isDragging = false;
         HandleSnapOrReset();
         OnDragEnd?.Invoke();
         transform.DOScale(normalScale, tweenAnimationDuration);
@@ -122,25 +171,21 @@ public class DragAndDrop : MonoBehaviour
         var closestTransform = GetClosestTarget();
         var closestPosition = GetClosestPosition();
         
-        // Check for closest snapping option
         if (closestTransform != null && 
             (closestPosition == null || 
              Vector2.Distance(transform.position, closestTransform.position) <= 
              Vector2.Distance(transform.position, closestPosition.Value)))
         {
-            // Snap to closest transform
             SnapToTarget(closestTransform);
             OnCorrectSnap?.Invoke(closestTransform, objIndex);
         }
         else if (closestPosition != null)
         {
-            // Snap to closest position
             SnapToTarget(closestPosition.Value);
-            OnCorrectSnap?.Invoke(null, objIndex); // Pass null for transform if snapping to position
+            OnCorrectSnap?.Invoke(null, objIndex);
         }
         else
         {
-            // Return to start position
             ResetToStart();
             OnIncorrectSnap?.Invoke(objIndex);
         }
@@ -157,6 +202,7 @@ public class DragAndDrop : MonoBehaviour
     private void SnapToTarget(Transform target)
     {
         transform.DOMove(target.position, tweenAnimationDuration).SetEase(Ease.OutBack);
+        objectSpriteRenderer.sortingOrder = snappedLayerIndex;
         isSnapped = true;
         canDrag = false;
     }
@@ -173,6 +219,7 @@ public class DragAndDrop : MonoBehaviour
     private void SnapToTarget(Vector2 position)
     {
         transform.DOMove(new Vector3(position.x, position.y, transform.position.z), tweenAnimationDuration).SetEase(Ease.OutBack);
+        objectSpriteRenderer.sortingOrder = snappedLayerIndex;
         isSnapped = true;
         canDrag = false;
     }
@@ -185,13 +232,15 @@ public class DragAndDrop : MonoBehaviour
     private IEnumerator ReturnToStartPosition()
     {
         yield return new WaitForSecondsRealtime(delayBeforeReturnStartPos);
-        transform.DOMove(StartPosition, tweenAnimationDuration);
-        isSnapped = false;
+        transform.DOMove(StartPosition, tweenAnimationDuration).OnComplete(() =>
+        { 
+            objectSpriteRenderer.sortingOrder = startLayerIndex;
+        });
     }
 
-    private bool IsTouchingObject(Finger touchedFinger)
+    private bool IsTouchingObject(Vector3 touchPosition)
     {
-        var worldTouchPosition = mainCamera.ScreenToWorldPoint(new Vector3(touchedFinger.screenPosition.x, touchedFinger.screenPosition.y, mainCamera.nearClipPlane));
+        var worldTouchPosition = mainCamera.ScreenToWorldPoint(new Vector3(touchPosition.x, touchPosition.y, mainCamera.nearClipPlane));
         var localScale = transform.localScale;
         var objectRadius = Mathf.Max(localScale.x, localScale.y);
         return Vector2.Distance(worldTouchPosition, transform.position) <= objectRadius;

@@ -81,4 +81,16 @@ public class toothbrushScript : MonoBehaviour
     private void OnTriggerExit2D(Collider2D other){
         timer=0f;
     }
+    void  OnMouseDown(){
+        Vector2 mousePos=Input.mousePosition;
+        Vector2 screenPoint=mainCam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, mainCam.nearClipPlane));
+        began=true;
+        delta=new Vector2(transform.position.x-screenPoint.x,transform.position.y-screenPoint.y);
+    }
+    void OnMouseDrag(){
+        Vector2 mousePos=Input.mousePosition;
+        Vector2 screenPoint=mainCam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, mainCam.nearClipPlane));
+        transform.position=new Vector2(screenPoint.x+delta.x,screenPoint.y+delta.y);
+    }
+    void OnMouseUp()=>began=false;
 }

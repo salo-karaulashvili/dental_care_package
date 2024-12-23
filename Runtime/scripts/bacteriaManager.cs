@@ -75,12 +75,12 @@ public class bacteriaManager : MonoBehaviour
 
     void OnMouseDown()
     {
-        /*if(cooldown>=COOLDOWN_TIME){
+        if(cooldown>=COOLDOWN_TIME){
             Invoke("falseGameon",1f);
             transform.GetComponent<Animator>().SetTrigger(trigNamesDeath[deathAnimIndx]);
             deadBacteriaCount++;
             cooldown=0;
-        }*/
+        }
     }
     void falseGameon(){gameOn=false;}
 }

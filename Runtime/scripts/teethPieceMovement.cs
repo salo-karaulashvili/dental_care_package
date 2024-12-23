@@ -20,6 +20,10 @@ public class teethPieceMovement : MonoBehaviour
 
     private void Awake(){
         dragAndDrop = GetComponent<DragAndDrop>();
+        dragAndDrop.ObjectSpriteRenderer=GetComponent<SpriteRenderer>();
+        dragAndDrop.DragLayerIndex=3;
+        dragAndDrop.SnappedLayerIndex=2;
+        dragAndDrop.StartLayerIndex=1;
     }
 
     public void init(Vector2 correctPosition){
