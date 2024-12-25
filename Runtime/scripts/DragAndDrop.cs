@@ -49,8 +49,16 @@ public class DragAndDrop : MonoBehaviour
         get => startLayerIndex;
         set => startLayerIndex = value;
     }
-    public bool IsSnapped => isSnapped;
-    public bool CanDrag => canDrag;
+    public bool IsSnapped 
+    {
+        get => isSnapped;
+        set => isSnapped = value;
+    }
+    public bool CanDrag
+    {
+        get => canDrag;
+        set => canDrag = value;
+    }
 
     public List<Vector2> TargetPositions
     {

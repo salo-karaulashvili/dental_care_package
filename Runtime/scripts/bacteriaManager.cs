@@ -11,15 +11,13 @@ public class bacteriaManager : MonoBehaviour
     [SerializeField] Camera mainCam;
     private static float IDLE_TIME=5f;
     private static float COOLDOWN_TIME=1f;
-    private static float colliderRadius=0.9f;
-    private static float colliderOffsety=1.63f;
     private bool neg;
     public bool gameOn;
     private float totaladded;
     public int deadBacteriaCount;
     private float cooldown=COOLDOWN_TIME;
-    private static List<String> trigNames=new List<string>{"orange","green","pink","purple"};
-    private static List<String> trigNamesDeath=new List<string>{"odie","gdie","pdie","pudie"};
+    private static List<string> trigNames=new List<string>{"orange","green","pink","purple"};
+    private static List<string> trigNamesDeath=new List<string>{"odie","gdie","pdie","pudie"};
     private int deathAnimIndx;
     public void init(int index,int length){
         gameObject.SetActive(true);
@@ -67,10 +65,6 @@ public class bacteriaManager : MonoBehaviour
         }
         }else totaladded=0;
         cooldown+=Time.deltaTime;
-    }
-
-    bool almostThere(Vector2 p1, Vector2 d,float threshold){ //p=pos1, d=destination
-        return math.abs(d.y+colliderOffsety-p1.y)<threshold&&math.abs(d.x-p1.x)<threshold;
     }
 
     void OnMouseDown()
