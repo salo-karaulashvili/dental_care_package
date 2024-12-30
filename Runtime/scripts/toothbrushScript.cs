@@ -53,7 +53,7 @@ public class toothbrushScript : MonoBehaviour
         }
         SpriteResolver sp=other.GetComponent<SpriteResolver>();
         if(sp!=null){
-            if(timer>0.5f&&!other.GetComponent<SpriteResolver>().GetLabel().Contains("clean")){
+            if(timer>0.2f&&!other.GetComponent<SpriteResolver>().GetLabel().Contains("clean")){
                 timer=0;
                 if(other.GetComponent<SpriteResolver>().GetLabel().Contains("broken")){
                     other.GetComponent<SpriteResolver>().SetCategoryAndLabel("textures","broken_clean");
@@ -62,18 +62,16 @@ public class toothbrushScript : MonoBehaviour
                     other.GetComponentInChildren<Animator>().SetTrigger("happy");
                 }
                 cleanteeth++;
-                Transform foamChild=other.gameObject.transform.Find("Foam").transform.GetChild(0);
-                var main1=foamChild.GetComponent<ParticleSystem>().main;
-                var main2=foamChild.GetChild(0).GetComponent<ParticleSystem>().main;
-                main1.loop=false;
-                main2.loop=false;
-                main1.startLifetime=0.5f;
-                main2.startLifetime=0.5f;
             }
             else{
                 timer+=Time.deltaTime;
                 if(!sp.GetLabel().Contains("clean")) {
-                    other.gameObject.transform.Find("Foam").gameObject.SetActive(true);
+                    Transform foam=other.gameObject.transform.GetChild(1);
+                    if(!foam.GetChild(0).gameObject.activeSelf){
+                        foam.GetChild(0).gameObject.SetActive(true);
+                        foam.GetChild(0).GetChild(0).gameObject.SetActive(true);
+                        //Debug.Log("reset");
+                    }
                 }
             } 
         }
@@ -81,16 +79,16 @@ public class toothbrushScript : MonoBehaviour
     private void OnTriggerExit2D(Collider2D other){
         timer=0f;
     }
-    void  OnMouseDown(){
-        Vector2 mousePos=Input.mousePosition;
-        Vector2 screenPoint=mainCam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, mainCam.nearClipPlane));
-        began=true;
-        delta=new Vector2(transform.position.x-screenPoint.x,transform.position.y-screenPoint.y);
-    }
-    void OnMouseDrag(){
-        Vector2 mousePos=Input.mousePosition;
-        Vector2 screenPoint=mainCam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, mainCam.nearClipPlane));
-        transform.position=new Vector2(screenPoint.x+delta.x,screenPoint.y+delta.y);
-    }
+    // void  OnMouseDown(){
+    //     Vector2 mousePos=Input.mousePosition;
+    //     Vector2 screenPoint=mainCam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, mainCam.nearClipPlane));
+    //     began=true;
+    //     delta=new Vector2(transform.position.x-screenPoint.x,transform.position.y-screenPoint.y);
+    // }
+    // void OnMouseDrag(){
+    //     Vector2 mousePos=Input.mousePosition;
+    //     Vector2 screenPoint=mainCam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, mainCam.nearClipPlane));
+    //     transform.position=new Vector2(screenPoint.x+delta.x,screenPoint.y+delta.y);
+    // }
     void OnMouseUp()=>began=false;
 }

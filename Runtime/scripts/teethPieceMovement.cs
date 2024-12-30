@@ -5,10 +5,8 @@ public class teethPieceMovement : MonoBehaviour
 {
     [SerializeField] Transform destination;
     public bool isThere;
-    private bool beagn=false;
     Vector2 correctPosition;
     private DragAndDrop dragAndDrop;
-
 
     private void OnEnable(){
         dragAndDrop.OnIncorrectSnap += incorrectAnimation;
@@ -29,13 +27,13 @@ public class teethPieceMovement : MonoBehaviour
     public void init(Vector2 correctPosition){
         isThere=false;
         this.correctPosition=correctPosition;
+        transform.position=correctPosition;
         transform.DOMove(destination.position,0.5f);
         Invoke("trueisThere",0.7f);
-        
     }
     void trueisThere(){
         isThere=true;
-        dragAndDrop.TargetPositions.Add(correctPosition);
+        if(dragAndDrop.TargetPositions.Count==0) dragAndDrop.TargetPositions.Add(correctPosition);
         dragAndDrop.StartPosition=destination.position;
         dragAndDrop.enabled=true;
     }

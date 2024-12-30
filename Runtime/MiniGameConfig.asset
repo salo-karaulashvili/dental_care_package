@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: MiniGameConfig
   m_EditorClassIdentifier: 
   MiniGameName: Dental_Care
-  Version: 0.1.5
+  Version: 0.1.6
   Url: https://pub-fa1b1109a096485e8d8a47464cb6256a.r2.dev
   CustomRenderPipelineAsset: {fileID: 11400000, guid: 899740d0d211eb443905dc1dbe28ef11, type: 2}

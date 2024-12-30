@@ -7,22 +7,21 @@ using UnityEngine;
 
 public class DragAndDrop : MonoBehaviour
 {
-    [Header("General Settings")]
+     [Header("General Settings")]
     private Camera mainCamera;
     [SerializeField] private float fingerFollowSpeed;
     [SerializeField] private float snapRange;
     [SerializeField] private int objIndex;
     [SerializeField] private SpriteRenderer objectSpriteRenderer;
-    public int ObjIndex
-    {
-        get => objIndex;
-        set => objIndex = value;
-    }
-
     public SpriteRenderer ObjectSpriteRenderer
     {
         get => objectSpriteRenderer;
         set => objectSpriteRenderer = value;
+    }
+    public int ObjIndex
+    {
+        get => objIndex;
+        set => objIndex = value;
     }
 
     [Header("Dragging Settings")]
@@ -34,32 +33,16 @@ public class DragAndDrop : MonoBehaviour
     [SerializeField] private int snappedLayerIndex;
     [SerializeField] private int startLayerIndex;
 
-    public int DragLayerIndex
-    {
-        get => dragLayerIndex;
-        set => dragLayerIndex = value;
-    }
-        public int SnappedLayerIndex
-    {
-        get => snappedLayerIndex;
-        set => snappedLayerIndex = value;
-    }
-        public int StartLayerIndex
-    {
-        get => startLayerIndex;
-        set => startLayerIndex = value;
-    }
     public bool IsSnapped 
     {
         get => isSnapped;
         set => isSnapped = value;
     }
-    public bool CanDrag
+    public bool CanDrag 
     {
         get => canDrag;
         set => canDrag = value;
     }
-
     public List<Vector2> TargetPositions
     {
         get => targetPositions;
@@ -72,6 +55,23 @@ public class DragAndDrop : MonoBehaviour
         set => targetTransforms = value;
     }
 
+    public int DragLayerIndex
+    {
+        get => dragLayerIndex;
+        set => dragLayerIndex = value;
+    }
+
+    public int SnappedLayerIndex
+    {
+        get => snappedLayerIndex;
+        set => snappedLayerIndex = value;
+    }
+
+    public int StartLayerIndex
+    {
+        get => startLayerIndex;
+        set => startLayerIndex = value;
+    }
     [Header("Visual Feedback")]
     [SerializeField] private float dragScale;
     [SerializeField] private float normalScale;
@@ -116,6 +116,7 @@ public class DragAndDrop : MonoBehaviour
         else if (Input.GetMouseButton(0) && isDragging)
         {
             HandleFingerMove(Input.mousePosition);
+            
         }
         else if (Input.GetMouseButtonUp(0) && isDragging)
         {
@@ -133,6 +134,7 @@ public class DragAndDrop : MonoBehaviour
             else if (touch.phase == TouchPhase.Moved && isDragging)
             {
                 HandleFingerMove(touch.position);
+                
             }
             else if (touch.phase == TouchPhase.Ended && isDragging)
             {
@@ -157,11 +159,33 @@ public class DragAndDrop : MonoBehaviour
     private void HandleFingerMove(Vector3 touchPosition)
     {
         if (!isDragging || activeTouchIndex != 0) return;
+    
         var targetPosition = mainCamera.ScreenToWorldPoint(new Vector3(touchPosition.x, touchPosition.y, mainCamera.nearClipPlane)) + touchOffset;
         var position = transform.position;
         targetPosition.z = position.z;
         position = Vector2.Lerp(position, targetPosition, fingerFollowSpeed);
         transform.position = position;
+
+        var closestTransform = GetClosestTarget();
+        var closestPosition = GetClosestPosition();
+        if (closestTransform != null)
+        {
+            var distanceToClosest = Vector2.Distance(transform.position, closestTransform.position);
+            if (distanceToClosest <= snapRange)
+            {
+                SnapToTarget(closestTransform);
+                OnCorrectSnap?.Invoke(closestTransform, objIndex);
+                isDragging = false;
+                activeTouchIndex = -1;
+            }
+        } if (closestPosition != null)
+        {
+             SnapToTarget(closestPosition.Value);
+            OnCorrectSnap?.Invoke(null, objIndex);
+            isDragging = false;
+            activeTouchIndex = -1;
+
+        }
     }
 
     private void HandleFingerUp()
@@ -209,7 +233,10 @@ public class DragAndDrop : MonoBehaviour
 
     private void SnapToTarget(Transform target)
     {
-        transform.DOMove(target.position, tweenAnimationDuration).SetEase(Ease.OutBack);
+        transform.DOMove(target.position, tweenAnimationDuration).SetEase(Ease.OutBack).OnComplete(()=>
+        {
+            transform.DOScale(normalScale, tweenAnimationDuration);
+        });;
         objectSpriteRenderer.sortingOrder = snappedLayerIndex;
         isSnapped = true;
         canDrag = false;
@@ -226,7 +253,11 @@ public class DragAndDrop : MonoBehaviour
 
     private void SnapToTarget(Vector2 position)
     {
-        transform.DOMove(new Vector3(position.x, position.y, transform.position.z), tweenAnimationDuration).SetEase(Ease.OutBack);
+        transform.DOMove(new Vector3(position.x, position.y, transform.position.z), tweenAnimationDuration).SetEase(Ease.OutBack).OnComplete(()=>
+        {
+            transform.DOScale(normalScale, tweenAnimationDuration);
+        });
+
         objectSpriteRenderer.sortingOrder = snappedLayerIndex;
         isSnapped = true;
         canDrag = false;
