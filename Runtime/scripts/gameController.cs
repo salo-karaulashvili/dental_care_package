@@ -110,6 +110,7 @@ public class gameController : MonoBehaviour
             happyFace=happyFacehuman;
             mouthArea=humanMoutharea;
             brokenToothArea=humanBrokenToothArea;
+            ToothBrushInitPosition=new Vector3(6.88999987f,0.610000014f,0);
         }
         else if (crocodile){
             curBacteria.transform.localScale=new Vector3(curBacteria.transform.localScale.x/2,curBacteria.transform.localScale.y/2,curBacteria.transform.localScale.z/2);
@@ -122,6 +123,7 @@ public class gameController : MonoBehaviour
             happyFace=crocHappyFace;
             mouthArea=crocMoutharea;
             brokenToothArea=crocBrokenToothArea;
+            ToothBrushInitPosition=new Vector3(6.42999983f,0.310000002f,0);
         }
         else if(shark){
             curBacteria.transform.localScale=new Vector3(curBacteria.transform.localScale.x/2,curBacteria.transform.localScale.y/2,curBacteria.transform.localScale.z/2);
@@ -134,15 +136,17 @@ public class gameController : MonoBehaviour
             happyFace=sharkHappyFace;
             mouthArea=sharkMouthArea;
             brokenToothArea=sharkBrokenToothArea;
+            ToothBrushInitPosition=new Vector3(6.36000013f,0.0399999917f,0);
         }
         mouthArea.gameObject.SetActive(true);
         spawnBacteria();
-        ToothBrushInitPosition=toothbrush.transform.position;
         curTooth=null;
         index=0;
         maincam.backgroundColor=backColor;
         gameon=true;
         tbs.cleanteeth=0;
+        toothbrush.transform.position=new Vector3(11.5699997f,ToothBrushInitPosition.y,0);
+
     }
 
     // Update is called once per frame
@@ -153,7 +157,11 @@ public class gameController : MonoBehaviour
             }
             else if(!curBacteria.GetComponent<bacteriaManager>().gameOn&&curBacteria.GetComponent<bacteriaManager>().deadBacteriaCount==BACTERIA_TO_KILL){
                 toothbrush.gameObject.SetActive(true);
-                tbs.gameon=true;
+                toothbrush.transform.DOMove(ToothBrushInitPosition,0.3f).SetEase(Ease.Linear).OnComplete(()=>{
+                    toothbrush.transform.DOMoveX(ToothBrushInitPosition.x+0.7f,0.3f).SetEase(Ease.Linear).OnComplete(()=>{
+                        toothbrush.transform.DOMoveX(ToothBrushInitPosition.x,0.3f).SetEase(Ease.Linear).OnComplete(()=>tbs.gameon=true);
+                    });
+                });
                 curBacteria.GetComponent<bacteriaManager>().deadBacteriaCount++;
             }
             if(tbs.cleanteeth==teeth.Length){
@@ -161,8 +169,8 @@ public class gameController : MonoBehaviour
                 Collider2D[] col=toothbrush.GetComponents<Collider2D>();
                 for(int i=0;i<col.Length;i++) col[i].enabled=false;
                 tbs.cleanteeth++;
-                toothbrushMove=toothbrush.transform.DOMove(ToothBrushInitPosition,2f).SetEase(Ease.Linear).OnComplete(()=>{toothbrushMove=null;});
-                Invoke("repairBrokenTooth",2f);
+                toothbrushMove=toothbrush.transform.DOMove(new Vector3(11.5699997f,ToothBrushInitPosition.y),0.5f).SetEase(Ease.Linear).OnComplete(()=>{toothbrushMove=null;});
+                Invoke("repairBrokenTooth",1f);
             }
             if(curTooth!=null&&index<5&&index>0){
                 if(curTooth.GetComponent<teethPieceMovement>().isThere){
@@ -213,8 +221,8 @@ public class gameController : MonoBehaviour
             curMouth.SetActive(false);
             buttons.SetActive(true);
             if(toothbrushMove!=null) toothbrushMove.Kill();
-            toothbrush.transform.position=ToothBrushInitPosition;
             toothbrush.gameObject.SetActive(false);
+            toothbrush.transform.position=new Vector3(11.5699997f,-0.569999993f,0);
             bacteria.GetComponent<bacteriaManager>().deadBacteriaCount=0;
             tbs.cleanteeth=0;
             maincam.backgroundColor=new Color32(95,156,246,255);
